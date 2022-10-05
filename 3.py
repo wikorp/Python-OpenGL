@@ -1,176 +1,37 @@
 #!/usr/bin/env python3
 import sys
 import math
-import numpy
-import random
 
 from glfw.GLFW import *
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-arr = numpy.zeros((100, 100, 3))
+left_mouse_button_pressed = 0
+right_mouse_button_pressed = 0
+R = 10.0
+viewer = [0.0, 0.0, 10.0]
+
+theta = 0.0
+pix2angle = 1.0
+
+mouse_x_pos_old = 0
+delta_x = 0
+
+alpha = 0.0
+piy2angle = 1.0
+
+mouse_y_pos_old = 0
+delta_y = 0
 
 def startup():
     update_viewport(None, 400, 400)
     glClearColor(0.0, 0.0, 0.0, 1.0)
     glEnable(GL_DEPTH_TEST)
-    egg_prepare()
 
 
 def shutdown():
     pass
-
-def egg_prepare():
-    u = 0
-    v = 0
-    u_i = 0
-    v_i = 0
-    for i in range(100):
-        for j in range(100):
-            x = (-90*u**5 + 225*u**4 - 270*u**3 + 180*u**2 - 45*u) * math.cos(math.pi * v)
-            y = 160*u**4 - 320*u**3 + 160*u**2 - 5
-            z = (-90*u**5 + 225*u**4 - 270*u**3 + 180*u**2 - 45*u) * math.sin(math.pi * v)
-            
-            arr[u_i][v_i][0] = x
-            arr[u_i][v_i][1] = y 
-            arr[u_i][v_i][2] = z
-            
-            v_i += 1
-            v += 0.01
-            
-        u_i += 1
-        u += 0.01
-
-        v_i = 0 
-        v = 0
-    
-def egg30():
-    glBegin(GL_POINTS)
-       
-    for i in range(100):
-        for j in range(100):
-            glVertex3f(arr[i][j][0],arr[i][j][1],arr[i][j][2])
-
-    glEnd()
-
-def egg35():
-    glBegin(GL_LINES)
-
-    for i in range(100):
-        for j in range(100):
-            if (j < 99):
-                glVertex3f(arr[i][j][0],arr[i][j][1],arr[i][j][2])
-                glVertex3f(arr[i][j+1][0],arr[i][j+1][1],arr[i][j+1][2])
-            else:
-                glVertex3f(arr[i][99][0],arr[i][99][1],arr[i][99][2])
-                glVertex3f(arr[i][0][0],arr[i][0][1],arr[i][0][2])
-    
-    for j in range(100):
-        for i in range(100):
-            if (i < 99):
-                glVertex3f(arr[i][j][0],arr[i][j][1],arr[i][j][2])
-                glVertex3f(arr[i+1][j][0],arr[i+1][j][1],arr[i+1][j][2])
-            else:
-                glVertex3f(arr[99][j][0],arr[99][j][1],arr[99][j][2])
-                glVertex3f(arr[0][j][0],arr[0][j][1],arr[0][j][2])
-    
-    glEnd()
-
-    
-def egg40():
-    glBegin(GL_TRIANGLES)
-
-    for i in range(100):
-        for j in range(100):
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (j < 99):
-                glVertex3f(arr[i][j][0],arr[i][j][1],arr[i][j][2])
-                glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-                glVertex3f(arr[i][j+1][0],arr[i][j+1][1],arr[i][j+1][2])
-            else:
-                glVertex3f(arr[i][99][0],arr[i][99][1],arr[i][99][2])
-                glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-                glVertex3f(arr[i][0][0],arr[i][0][1],arr[i][0][2])
-            
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (i < 99):
-                glVertex3f(arr[i+1][j][0],arr[i+1][j][1],arr[i+1][j][2])
-            else:
-                glVertex3f(arr[0][j][0],arr[0][j][1],arr[0][j][2])
-
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (i < 99):
-                glVertex3f(arr[i+1][j][0],arr[i+1][j][1],arr[i+1][j][2])
-            else:
-                glVertex3f(arr[0][j][0],arr[0][j][1],arr[0][j][2])
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (j < 99):
-                glVertex3f(arr[i][j+1][0],arr[i][j+1][1],arr[i][j+1][2])
-            else:
-                glVertex3f(arr[i][0][0],arr[i][0][1],arr[i][0][2])
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (j < 99 and i < 99):
-                glVertex3f(arr[i+1][j+1][0],arr[i+1][j+1][1],arr[i+1][j+1][2])
-            elif (j < 99 and i == 99):
-                glVertex3f(arr[0][j+1][0],arr[0][j+1][1],arr[0][j+1][2])
-            elif (j == 99 and i < 99):
-                glVertex3f(arr[i+1][0][0],arr[i+1][0][1],arr[i+1][0][2])
-            elif (j == 99 and i == 99):
-                glVertex3f(arr[0][0][0],arr[0][0][1],arr[0][0][2])
-
-    glEnd()
-
-def egg45():
-    glBegin(GL_TRIANGLE_STRIP)
-
-    for i in range(100):
-        for j in range(100):
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (j < 99):
-                glVertex3f(arr[i][j][0],arr[i][j][1],arr[i][j][2])
-                glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-                glVertex3f(arr[i][j+1][0],arr[i][j+1][1],arr[i][j+1][2])
-            else:
-                glVertex3f(arr[i][99][0],arr[i][99][1],arr[i][99][2])
-                glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-                glVertex3f(arr[i][0][0],arr[i][0][1],arr[i][0][2])
-            
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (i < 99):
-                glVertex3f(arr[i+1][j][0],arr[i+1][j][1],arr[i+1][j][2])
-            else:
-                glVertex3f(arr[0][j][0],arr[0][j][1],arr[0][j][2])
-
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (i < 99):
-                glVertex3f(arr[i+1][j][0],arr[i+1][j][1],arr[i+1][j][2])
-            else:
-                glVertex3f(arr[0][j][0],arr[0][j][1],arr[0][j][2])
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (j < 99):
-                glVertex3f(arr[i][j+1][0],arr[i][j+1][1],arr[i][j+1][2])
-            else:
-                glVertex3f(arr[i][0][0],arr[i][0][1],arr[i][0][2])
-
-            glColor3f(random.uniform(0,1),random.uniform(0,1),random.uniform(0,1))
-            if (j < 99 and i < 99):
-                glVertex3f(arr[i+1][j+1][0],arr[i+1][j+1][1],arr[i+1][j+1][2])
-            elif (j < 99 and i == 99):
-                glVertex3f(arr[0][j+1][0],arr[0][j+1][1],arr[0][j+1][2])
-            elif (j == 99 and i < 99):
-                glVertex3f(arr[i+1][0][0],arr[i+1][0][1],arr[i+1][0][2])
-            elif (j == 99 and i == 99):
-                glVertex3f(arr[0][0][0],arr[0][0][1],arr[0][0][2])
-
-    glEnd()
 
 
 def axes():
@@ -190,43 +51,131 @@ def axes():
 
     glEnd()
 
-def spin(angle):
-    glRotatef(angle, 1.0, 0.0, 0.0)
-    glRotatef(angle, 0.0, 1.0, 0.0)
-    glRotatef(angle, 0.0, 0.0, 1.0)
+
+def example_object():
+    glColor3f(1.0, 1.0, 1.0)
+
+    quadric = gluNewQuadric()
+    gluQuadricDrawStyle(quadric, GLU_LINE)
+    glRotatef(90, 1.0, 0.0, 0.0)
+    glRotatef(-90, 0.0, 1.0, 0.0)
+
+    gluSphere(quadric, 1.5, 10, 10)
+
+    glTranslatef(0.0, 0.0, 1.1)
+    gluCylinder(quadric, 1.0, 1.5, 1.5, 10, 5)
+    glTranslatef(0.0, 0.0, -1.1)
+
+    glTranslatef(0.0, 0.0, -2.6)
+    gluCylinder(quadric, 0.0, 1.0, 1.5, 10, 5)
+    glTranslatef(0.0, 0.0, 2.6)
+
+    glRotatef(90, 1.0, 0.0, 1.0)
+    glTranslatef(0.0, 0.0, 1.5)
+    gluCylinder(quadric, 0.1, 0.0, 1.0, 5, 5)
+    glTranslatef(0.0, 0.0, -1.5)
+    glRotatef(-90, 1.0, 0.0, 1.0)
+
+    glRotatef(-90, 1.0, 0.0, 1.0)
+    glTranslatef(0.0, 0.0, 1.5)
+    gluCylinder(quadric, 0.1, 0.0, 1.0, 5, 5)
+    glTranslatef(0.0, 0.0, -1.5)
+    glRotatef(90, 1.0, 0.0, 1.0)
+
+    glRotatef(90, 0.0, 1.0, 0.0)
+    glRotatef(-90, 1.0, 0.0, 0.0)
+    gluDeleteQuadric(quadric)
+
 
 def render(time):
+    global theta
+    global alpha
+    global R
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
-    spin(time * 180 / 3.1415)
+    
+    if left_mouse_button_pressed:
+        theta += delta_x * pix2angle
+      
+    if left_mouse_button_pressed:
+        alpha += delta_y * piy2angle
+        alpha = min(alpha, 89.0)
+        alpha = max(alpha, -89.0)
 
+    if right_mouse_button_pressed:
+    	if delta_y > 0:
+    		R += 0.1
+    	if delta_y < 0:
+    		R -= 0.1
+    
+    alpha_r = (alpha * math.pi / 180) % (2 * math.pi)
+    theta_r = (theta * math.pi / 180) % (2 * math.pi)
+   
+    x_eye = R * math.cos(theta_r) * math.cos(alpha_r)
+    y_eye = R * math.sin(alpha_r) 
+    z_eye = R * math.sin(theta_r) * math.cos(alpha_r)
+      
+    gluLookAt(x_eye, y_eye, z_eye,
+              0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+    
     axes()
-    #egg30()
-    #egg35()
-    #egg40()
-    egg45()
+  
+    example_object()
 
     glFlush()
 
 
 def update_viewport(window, width, height):
-    if width == 0:
-        width = 1
-    if height == 0:
-        height = 1
-    aspect_ratio = width / height
+    global pix2angle
+    pix2angle = 360.0 / width
+    piy2angle = 360.0 / height
+    
 
     glMatrixMode(GL_PROJECTION)
-    glViewport(0, 0, width, height)
     glLoadIdentity()
 
+    gluPerspective(70, 1.0, 0.1, 300.0)
+
     if width <= height:
-        glOrtho(-7.5, 7.5, -7.5 / aspect_ratio, 7.5 / aspect_ratio, 7.5, -7.5)
+        glViewport(0, int((height - width) / 2), width, width)
     else:
-        glOrtho(-7.5 * aspect_ratio, 7.5 * aspect_ratio, -7.5, 7.5, 7.5, -7.5)
+        glViewport(int((width - height) / 2), 0, height, height)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
+
+
+def keyboard_key_callback(window, key, scancode, action, mods):
+    if key == GLFW_KEY_ESCAPE and action == GLFW_PRESS:
+        glfwSetWindowShouldClose(window, GLFW_TRUE)
+
+
+def mouse_motion_callback(window, x_pos, y_pos):
+    global delta_x
+    global mouse_x_pos_old
+    global delta_y
+    global mouse_y_pos_old
+    
+    delta_x = x_pos - mouse_x_pos_old
+    mouse_x_pos_old = x_pos
+    delta_y = y_pos - mouse_y_pos_old
+    mouse_y_pos_old = y_pos
+
+
+def mouse_button_callback(window, button, action, mods):
+    global left_mouse_button_pressed
+    global right_mouse_button_pressed
+
+    if button == GLFW_MOUSE_BUTTON_LEFT and action == GLFW_PRESS:
+        left_mouse_button_pressed = 1
+    else:
+        left_mouse_button_pressed = 0
+        
+    if button == GLFW_MOUSE_BUTTON_RIGHT and action == GLFW_PRESS:
+        right_mouse_button_pressed = 1
+    else:
+        right_mouse_button_pressed = 0
 
 
 def main():
@@ -240,6 +189,9 @@ def main():
 
     glfwMakeContextCurrent(window)
     glfwSetFramebufferSizeCallback(window, update_viewport)
+    glfwSetKeyCallback(window, keyboard_key_callback)
+    glfwSetCursorPosCallback(window, mouse_motion_callback)
+    glfwSetMouseButtonCallback(window, mouse_button_callback)
     glfwSwapInterval(1)
 
     startup()

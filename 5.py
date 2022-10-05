@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import sys
-import math
 
 from glfw.GLFW import *
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from PIL import Image
 
-viewer = [0.0, 5.0, 10.0]
-right_mouse_button_pressed = 0
+
+viewer = [0.0, 0.0, 10.0]
 left_mouse_button_pressed = 0
-R = 10.0
+off = False
 
 theta = 0.0
 pix2angle = 1.0
@@ -35,23 +35,17 @@ light_diffuse = [0.8, 0.8, 0.0, 1.0]
 light_specular = [1.0, 1.0, 1.0, 1.0]
 light_position = [0.0, 0.0, 10.0, 1.0]
 
-light2_ambient = [0.1, 0.1, 0.0, 1.0]
-light2_diffuse = [0.8, 0.8, 0.0, 1.0]
-light2_specular = [0.5, 0.5, 0.5, 0.5]
-light2_position = [-20.0, 15.0, 5.0, 1.0]
-
 att_constant = 1.0
 att_linear = 0.05
 att_quadratic = 0.001
 
-before_next = 0
-next_parametr = 0
-increse = 0
-decrese = 0
-parametr_iterator = 0
-
+image = None
+image2 = None
+t1 = 0
 
 def startup():
+    global image
+    global image2
     update_viewport(None, 400, 400)
     glClearColor(0.0, 0.0, 0.0, 1.0)
     glEnable(GL_DEPTH_TEST)
@@ -69,20 +63,23 @@ def startup():
     glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, att_constant)
     glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, att_linear)
     glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, att_quadratic)
-    
-    glLightfv(GL_LIGHT1, GL_AMBIENT, light2_ambient)
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, light2_diffuse)
-    glLightfv(GL_LIGHT1, GL_SPECULAR, light2_specular)
-    glLightfv(GL_LIGHT1, GL_POSITION, light2_position)
-    
-    glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, att_constant)
-    glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, att_linear)
-    glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, att_quadratic)
 
     glShadeModel(GL_SMOOTH)
     glEnable(GL_LIGHTING)
-    #glEnable(GL_LIGHT0)
-    glEnable(GL_LIGHT1)
+    glEnable(GL_LIGHT0)
+
+    glEnable(GL_TEXTURE_2D)
+    glEnable(GL_CULL_FACE)
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+    image = Image.open("tex1.tga")
+    image2 = Image.open("tex2.tga")
+    #glTexImage2D(
+   #     GL_TEXTURE_2D, 0, 3, image.size[0], image.size[1], 0,
+   #     GL_RGB, GL_UNSIGNED_BYTE, image.tobytes("raw", "RGB", 0, -1)
+   # )
 
 
 def shutdown():
@@ -92,85 +89,86 @@ def shutdown():
 def render(time):
     global theta
     global alpha
-    global R
-    global parametr_iterator
-    global next_parametr
-    global before_next
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
     gluLookAt(viewer[0], viewer[1], viewer[2],
               0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
-    
-    #object
-    quadric = gluNewQuadric()
-    gluQuadricDrawStyle(quadric, GLU_FILL)
-    gluSphere(quadric, 3.0, 10, 10)
-    gluDeleteQuadric(quadric)
-    
-    #color of light parametr selection and modification
-    if next_parametr == 1 and before_next == 0:
-    	parametr_iterator += 1
-    before_next = next_parametr
-    
-    if parametr_iterator > 3:
-    	parametr_iterator = 0
-    
-    if increse == 1:
-    	light2_specular[parametr_iterator] += 0.1
-    
-    if decrese == 1:
-    	light2_specular[parametr_iterator] -= 0.1
-    
-    light2_specular[parametr_iterator] = min(light2_specular[parametr_iterator], 1.0)
-    light2_specular[parametr_iterator] = max(light2_specular[parametr_iterator], 0.0)
-   
-    glLightfv(GL_LIGHT1, GL_SPECULAR, light2_specular)
-    
-    #print in console
-    #print (parametr_iterator)
-    
-    #light rotation
+
     if left_mouse_button_pressed:
-       theta += delta_x * pix2angle
+        theta += delta_x * pix2angle
+
+    glRotatef(theta, 0.0, 1.0, 0.0)
       
     if left_mouse_button_pressed:
         alpha += delta_y * piy2angle
-        #alpha = min(alpha, 89.0)
-        #alpha = max(alpha, -89.0)
 
-    if right_mouse_button_pressed:
-    	if delta_y > 0:
-    		R += 0.1
-    		
-    	if delta_y < 0:
-    		R -= 0.1
+    glRotatef(alpha, 1.0, 0.0, 0.0)
     
-    alpha_r = (alpha * math.pi / 180) % (2 * math.pi)
-    theta_r = (theta * math.pi / 180) % (2 * math.pi)
-    print (alpha)
-    print (theta)
-   
-    x = 5 * math.cos(theta_r) * math.cos(alpha_r)
-    y = 5 * math.sin(alpha_r) 
-    z = 5 * math.sin(theta_r) * math.cos(alpha_r)
+    if t1 == 0:
+    	image_tmp = image
+    else:
+    	image_tmp = image2
+    	
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, 3, image_tmp.size[0], image_tmp.size[1], 0,
+        GL_RGB, GL_UNSIGNED_BYTE, image_tmp.tobytes("raw", "RGB", 0, -1)
+    )
+
+    #glBegin(GL_QUADS)
+    #glTexCoord2f(0.0, 0.0)
+    #glVertex3f(-5.0, -5.0, 0.0)
+    #glTexCoord2f(1.0, 0.0)
+    #glVertex3f(5.0, -5.0, 0.0)
+    #glTexCoord2f(1.0, 1.0)
+    #glVertex3f(5.0, 5.0, 0.0)
+    #glTexCoord2f(0.0, 1.0)
+    #glVertex3f(-5.0, 5.0, 0.0)
+    #glEnd()
     
-    light2_position[0] = x
-    light2_position[1] = y
-    light2_position[2] = z
+    glBegin(GL_QUADS)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-2.0, -2.0, 2.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(2.0, -2.0, 2.0)
+    glTexCoord2f(1.0, 1.0)
+    glVertex3f(2.0, -2.0, -2.0)
+    glTexCoord2f(0.0, 1.0)
+    glVertex3f(-2.0, -2.0, -2.0)
+    glEnd()
     
-  #  glTranslate(x, y, z)
+    glBegin(GL_TRIANGLES)
+    if off == True:
+    	glTexCoord2f(0.0, 0.0)
+    	glVertex3f(-2.0, -2.0, 2.0)
+    	glTexCoord2f(1.0, 0.0)
+    	glVertex3f(2.0, -2.0, 2.0)
+    	glTexCoord2f(0.5, 1.0)
+    	glVertex3f(0.0, 4.0, 0.0)
     
-    glLightfv(GL_LIGHT1, GL_POSITION, light2_position)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(2.0, -2.0, 2.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(2.0, -2.0, -2.0)
+    glTexCoord2f(0.0, 1.0) #0.5, 1.0
+    glVertex3f(0.0, 4.0, 0.0)
     
-    #light
-    quadric = gluNewQuadric()
-    gluQuadricDrawStyle(quadric, GLU_LINE)
-    glTranslatef(x,y,z);
-    gluSphere(quadric, 0.5, 6, 5)
-    gluDeleteQuadric(quadric)
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(2.0, -2.0, -2.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(-2.0, -2.0, -2.0)
+    glTexCoord2f(0.5, 1.0)
+    glVertex3f(0.0, 4.0, 0.0)
     
+    glTexCoord2f(0.0, 0.0)
+    glVertex3f(-2.0, -2.0, -2.0)
+    glTexCoord2f(1.0, 0.0)
+    glVertex3f(-2.0, -2.0, 2.0)
+    glTexCoord2f(0.5, 1.0)
+    glVertex3f(0.0, 4.0, 0.0)
+    glEnd()
+
     glFlush()
 
 
@@ -192,29 +190,22 @@ def update_viewport(window, width, height):
     glLoadIdentity()
 
 
-def keyboard_key_callback(window, key, scancode, action, mods):	
-    global before_next
-    global next_parametr
-    global increse
-    global decrese
+def keyboard_key_callback(window, key, scancode, action, mods):
+    global off
+    global t1
+    global t2
     
     if key == GLFW_KEY_ESCAPE and action == GLFW_PRESS:
         glfwSetWindowShouldClose(window, GLFW_TRUE)
-     
+        
     if key == GLFW_KEY_SPACE and action == GLFW_PRESS:
-        next_parametr = 1
-    else:
-        next_parametr = 0
-         
-    if key == GLFW_KEY_UP and action == GLFW_PRESS:
-        increse = 1
-    else:
-        increse = 0
+        off = not off
     
-    if key == GLFW_KEY_DOWN and action == GLFW_PRESS:
-        decrese = 1
-    else:
-        decrese = 0
+    if key == GLFW_KEY_1 and action == GLFW_PRESS:
+        t1 = 0
+    
+    if key == GLFW_KEY_2 and action == GLFW_PRESS:
+        t1 = 1
 
 
 def mouse_motion_callback(window, x_pos, y_pos):
